@@ -1,0 +1,6 @@
+{
+  "name": "梨花祭コンプライアンス審査AI",
+  "description": "梨花祭実行委員会向けのコンプライアンス審査サポートAI。クラスTシャツや異装届の画像と内容をルールブックと照らし合わせて判定します。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
