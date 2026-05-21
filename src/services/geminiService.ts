@@ -1,7 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
 export async function analyzeApplication(text: string, rulebook: string, imageBase64?: string, mimeType?: string): Promise<string> {
   const SYSTEM_INSTRUCTION = `あなたは「2026年 梨花祭実行委員会・コンプライアンス担当官（運営判断サポートAI）」です。
 生徒から提出された「クラスTシャツ」や「異装届」の画像および申請内容を解析し、梨花祭ルールブックと照らし合わせて、運営が可否を判断するための専門的なレポートを作成してください。
@@ -35,38 +31,49 @@ ${rulebook}
 * パロディの場合、公式ガイドラインの有無を厳格に確認してください。
 * 常に「学校教育の観点」を忘れず、単なる否定ではなく「どうすれば目的テーマに寄り添えるか」の視点を持ってください。`;
 
+  const userContent: any[] = [];
+
+  if (text) {
+    userContent.push({ type: "text", text });
+  }
+
+  if (imageBase64 && mimeType) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${mimeType};base64,${imageBase64}` },
+    });
+  }
+
+  if (userContent.length === 0) {
+    throw new Error("テキストまたは画像を入力してください。");
+  }
+
   try {
-    const parts: any[] = [];
-    
-    if (text) {
-      parts.push({ text });
-    }
-    
-    if (imageBase64 && mimeType) {
-      parts.push({
-        inlineData: {
-          data: imageBase64,
-          mimeType: mimeType,
-        },
-      });
-    }
-
-    if (parts.length === 0) {
-      throw new Error("テキストまたは画像を入力してください。");
-    }
-
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: { parts },
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.2, // Keep it relatively deterministic for compliance
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
       },
+      body: JSON.stringify({
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.2,
+      }),
     });
 
-    return response.text || "解析結果を生成できませんでした。";
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(JSON.stringify(err));
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "解析結果を生成できませんでした。";
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Groq API Error:", error);
     throw new Error("解析中にエラーが発生しました。");
   }
 }
