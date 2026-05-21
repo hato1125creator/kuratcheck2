@@ -1,0 +1,28 @@
+# 環境変数（APIキー等） - 絶対にGitにコミットしない
+.env
+.env.local
+.env.*.local
+
+# 依存関係
+node_modules/
+
+# ビルド成果物
+dist/
+build/
+
+# ログ
+*.log
+npm-debug.log*
+
+# エディタ
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
