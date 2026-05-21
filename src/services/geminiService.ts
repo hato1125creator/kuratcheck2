@@ -56,7 +56,7 @@ ${rulebook}
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash-preview-05-20",
       contents: { parts },
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
